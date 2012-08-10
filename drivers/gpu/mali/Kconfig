@@ -1,0 +1,6 @@
+config MALI
+	tristate "ARM Mali GPU modules"
+	depends on ARM && m
+	default n
+	help
+	  This enables the generation of mali.ko and ump.ko.

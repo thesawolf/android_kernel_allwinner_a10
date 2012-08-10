@@ -1,0 +1,18 @@
+if ARCH_SUN4I
+
+comment "Allwinner A10 options"
+
+config TEGRA_FPGA
+	bool "FPGA Express support"
+
+config SW_DEBUG_UART
+	int "UART to use for low-level debug"
+	depends on DEBUG_LL
+	default 0
+	help
+	  Choose the UART on which kernel low-level debug messages should be
+	  output.
+
+source "arch/arm/mach-sun4i/wifi/Kconfig"
+
+endif
