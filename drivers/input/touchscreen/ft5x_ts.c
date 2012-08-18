@@ -50,20 +50,22 @@
 
 #define FOR_TSLIB_TEST
 //#define PRINT_INT_INFO
-//#define PRINT_POINT_INFO
+#define PRINT_POINT_INFO
 //#define DEBUG
 #define TOUCH_KEY_SUPPORT
 #ifdef TOUCH_KEY_SUPPORT
-#define TOUCH_KEY_LIGHT_SUPPORT
+//#define TOUCH_KEY_LIGHT_SUPPORT
 //#define TOUCH_KEY_FOR_EVB13
 //#define TOUCH_KEY_FOR_ANGDA
 #define TOUCH_KEY_FOR_SSA2
 #ifdef TOUCH_KEY_FOR_SSA2
-#define TOUCH_KEY_X_LIMIT (862)
-#define KEY1_Y (102)
-#define KEY2_Y (114)
-#define KEY3_Y (115)
-#define TOUCH_KEY_NUMBER (4)
+#define TOUCH_KEY_LOWER_X_LIMIT (848)
+#define TOUCH_KEY_HIGHER_X_LIMIT (852)
+//#define TOUCH_KEY_X_LIMIT (852)
+#define KEY1_Y (367)
+#define KEY2_Y (416)
+#define KEY3_Y (479)
+#define TOUCH_KEY_NUMBER (3)
 #endif
 #ifdef TOUCH_KEY_FOR_ANGDA
 #define TOUCH_KEY_X_LIMIT	(60000)
