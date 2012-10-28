@@ -49,24 +49,14 @@
 #include "ctp_platform_ops.h"
 
 #define FOR_TSLIB_TEST
-//#define PRINT_INT_INFO
-//#define PRINT_POINT_INFO
-//#define DEBUG
+#define PRINT_INT_INFO
+#define PRINT_POINT_INFO
+#define DEBUG
 #define TOUCH_KEY_SUPPORT
 #ifdef TOUCH_KEY_SUPPORT
 #define TOUCH_KEY_LIGHT_SUPPORT
-//#define TOUCH_KEY_FOR_EVB13
+#define TOUCH_KEY_FOR_EVB13
 //#define TOUCH_KEY_FOR_ANGDA
-#define TOUCH_KEY_FOR_SSA2
-#ifdef TOUCH_KEY_FOR_SSA2
-#define TOUCH_KEY_LOWER_X_LIMIT (848)
-#define TOUCH_KEY_HIGHER_X_LIMIT (852)
-#define TOUCH_KEY_X_LIMIT (852)
-#define KEY1_Y (367)
-#define KEY2_Y (416)
-#define KEY3_Y (479)
-#define TOUCH_KEY_NUMBER (3)
-#endif
 #ifdef TOUCH_KEY_FOR_ANGDA
 #define TOUCH_KEY_X_LIMIT	(60000)
 #define TOUCH_KEY_NUMBER	(4)
@@ -74,7 +64,11 @@
 #ifdef TOUCH_KEY_FOR_EVB13
 #define TOUCH_KEY_LOWER_X_LIMIT	(848)
 #define TOUCH_KEY_HIGHER_X_LIMIT	(852)
-#define TOUCH_KEY_NUMBER	(5)
+#define TOUCH_KEY_X_LIMIT (862)
+#define KEY1_Y (145)
+#define KEY2_Y (271)
+#define KEY3_Y (334)
+#define TOUCH_KEY_NUMBER	(4)
 #endif
 #endif
 
@@ -91,6 +85,11 @@ static LIST_HEAD (i2c_dev_list);
 static DEFINE_SPINLOCK(i2c_dev_list_lock);
 
 #define FT5X_NAME	"ft5x_ts"//"synaptics_i2c_rmi"//"synaptics-rmi-ts"//
+
+static unsigned char CTPM_FW[]=
+{
+#include "ft_app_5306.i"
+};
 
 static struct i2c_client *this_client;
 #ifdef TOUCH_KEY_LIGHT_SUPPORT
@@ -839,11 +838,12 @@ int byte_read(u8* pbt_buf, u8 bt_len)
 
 
 #define    FTS_PACKET_LENGTH       128 //2//4//8//16//32//64//128//256
-
+/*
 static unsigned char CTPM_FW[]=
 {
-#include "ft_app.i"
+#include "ft_app_5306.i"
 };
+*/
 unsigned char fts_ctpm_get_i_file_ver(void)
 {
     unsigned int ui_sz;
@@ -1347,7 +1347,8 @@ static int ft5x_read_data(void)
 			}
 		}
 #elif defined(TOUCH_KEY_FOR_EVB13)
-		if((event->x1 > TOUCH_KEY_LOWER_X_LIMIT)&&(event->x1<TOUCH_KEY_HIGHER_X_LIMIT))
+		//if((event->x1 > TOUCH_KEY_LOWER_X_LIMIT)&&(event->x1<TOUCH_KEY_HIGHER_X_LIMIT))
+		if(event->x1 == TOUCH_KEY_X_LIMIT)
 		{
 			if(1 == revert_x_flag){
 				event->x1 = SCREEN_MAX_X - event->x1;
@@ -1524,45 +1525,58 @@ static void ft5x_report_touchkey(void)
 	}
 #endif
 #ifdef TOUCH_KEY_FOR_EVB13
-	if((1==event->touch_point)&&((event->x1 > TOUCH_KEY_LOWER_X_LIMIT)&&(event->x1<TOUCH_KEY_HIGHER_X_LIMIT))){
+	//if((1==event->touch_point)&&((event->x1 > TOUCH_KEY_LOWER_X_LIMIT)&&(event->x1<TOUCH_KEY_HIGHER_X_LIMIT))){
+	if((1==event->touch_point)&&(event->x1 == TOUCH_KEY_X_LIMIT)) {
 		key_tp = 1;
-		if(event->y1 < 5){
+        	//if(event->y1 < 5){
+        	if(event->y1 == KEY1_Y) {
 			key_val = 1;
 			input_report_key(data->input_dev, key_val, 1);
 			input_sync(data->input_dev);
 			print_point_info("===KEY 1====\n");
-		}else if((event->y1 < 45)&&(event->y1>35)){
+		//}else if((event->y1 < 45)&&(event->y1>35)){
+		}else if(event->y1 == KEY2_Y) {
 			key_val = 2;
 			input_report_key(data->input_dev, key_val, 1);
 			input_sync(data->input_dev);
 			print_point_info("===KEY 2 ====\n");
-		}else if((event->y1 < 75)&&(event->y1>65)){
+		//}else if((event->y1 < 75)&&(event->y1>65)){
+		}else if(event->y1 == KEY3_Y) {
 			key_val = 3;
 			input_report_key(data->input_dev, key_val, 1);
 			input_sync(data->input_dev);
 			print_point_info("===KEY 3====\n");
-		}else if ((event->y1 < 105)&&(event->y1>95))	{
+		} /*else if ((event->y1 < 105)&&(event->y1>95))	{
 			key_val = 4;
 			input_report_key(data->input_dev, key_val, 1);
 			input_sync(data->input_dev);
 			print_point_info("===KEY 4====\n");
-		}
+		} */
+
+#ifdef TOUCH_KEY_LIGHT_SUPPORT
+	ft5x_lighting();
+#endif
+
+
 	}else{
 		key_tp = 0;
 	}
 #endif
 
+/*
 #ifdef TOUCH_KEY_LIGHT_SUPPORT
-	ft5x_lighting();
+        ft5x_lighting();
 #endif
-	return;
+*/
+        return;
 }
 #endif
+
 
 static void ft5x_report_value(void)
 {
 
-	//pr_info("==ft5x_report_value =\n");
+	pr_info("==ft5x_report_value =\n");
 #ifdef TOUCH_KEY_SUPPORT
 	ft5x_report_touchkey();
 #endif
@@ -1578,7 +1592,7 @@ static void ft5x_report_value(void)
 static void ft5x_ts_pen_irq_work(struct work_struct *work)
 {
 	int ret = -1;
-	//pr_info("==work 1=\n");
+	pr_info("==work 1=\n");
 	ret = ft5x_read_data();
 	if (ret == 0) {
 		ft5x_report_value();
@@ -1671,12 +1685,12 @@ ft5x_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		goto exit_alloc_data_failed;
 	}
 
-	//pr_info("touch panel gpio addr: = 0x%x", gpio_addr);
+	pr_info("touch panel gpio addr: = 0x%x", gpio_addr);
 	this_client = client;
 
-	//pr_info("ft5x_ts_probe : client->addr = %d. \n", client->addr);
+	pr_info("ft5x_ts_probe : client->addr = %d. \n", client->addr);
 	this_client->addr = client->addr;
-	//pr_info("ft5x_ts_probe : client->addr = %d. \n", client->addr);
+	pr_info("ft5x_ts_probe : client->addr = %d. \n", client->addr);
 	i2c_set_clientdata(client, ft5x_ts);
 
 #ifdef TOUCH_KEY_LIGHT_SUPPORT
@@ -1684,11 +1698,12 @@ ft5x_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 #endif
 
 #ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+        pr_info("===UPGRADE=====\n");
 	fts_ctpm_fw_upgrade_with_i_file();
 #endif
 
 
-//	pr_info("==INIT_WORK=\n");
+	pr_info("==INIT_WORK=\n");
 	INIT_WORK(&ft5x_ts->pen_event_work, ft5x_ts_pen_irq_work);
 	ft5x_ts->ts_workqueue = create_singlethread_workqueue(dev_name(&client->dev));
 	if (!ft5x_ts->ts_workqueue) {
@@ -1910,7 +1925,7 @@ static long aw_ioctl(struct file *file, unsigned int cmd,unsigned long arg )
 		case UPGRADE:
 		pr_info("==UPGRADE_WORK=\n");
 		fts_ctpm_fw_upgrade_with_i_file();
-		// calibrate();
+		//calibrate();
 
 		break;
 
@@ -2002,4 +2017,3 @@ module_exit(ft5x_ts_exit);
 MODULE_AUTHOR("<wenfs@Focaltech-systems.com>");
 MODULE_DESCRIPTION("FocalTech ft5x TouchScreen driver");
 MODULE_LICENSE("GPL");
-
